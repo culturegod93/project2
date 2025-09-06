@@ -1,6 +1,6 @@
 Project 2
 Описание:
-Project 2 - .
+Project 2 - проект.
 
 Структура проекта:
 Project 2 ├── data │ └── products.json ├── htmlcov │ └── index.html ├── src │ ├── init.py │ ├── models.py │ └── loader.py ├── tests │ ├── init.py │ ├── models_test.py │ └── loader_test.py ├── .coverage ├── .flake8 ├── .gitignore ├── README.md ├── poetry.lock └── poetry.toml
@@ -8,9 +8,9 @@ Project 2 ├── data │ └── products.json ├── htmlcov │ └�
 Тестирование:
 В проекте реализованы автоматические тесты с использованием pytest. Добавлены тесты (models.py и loader.py).
 
-Запуск тестов:
+1. Запуск тестов:
 poetry run pytest
-Проверка покрытия:
+2. Проверка покрытия:
 poetry run pytest --cov=src
 Тестируемые модули: models.py, loader.py.
 
@@ -18,10 +18,8 @@ poetry run pytest --cov=src
 
 
 Установка:
-
 1. Клонируйте репозиторий:
 git clone https://github.com/culturegod93/project2
-
 2. Установите зависимости:
 poetry install
 
@@ -31,5 +29,5 @@ poetry install
 Разработчик:
 Дмитрий Смирнов.
 
-Лицензия
+Лицензия:
 Проект лицензирован по лицензии MIT.

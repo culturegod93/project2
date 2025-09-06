@@ -25,14 +25,14 @@ Project 2
 └── poetry.toml
 
 Тестирование:
-В проекте реализованы автоматические тесты с использованием pytest. Добавлены тесты (models.py и loader.py).
+В проекте реализованы автоматические тесты с использованием pytest. Добавлены тесты (loader.py и models.py).
 
 1. Запуск тестов:
 poetry run pytest
 2. Проверка покрытия:
 poetry run pytest --cov=src
 
-Тестируемые модули: models.py, loader.py.
+Тестируемые модули: loader.py, models.py.
 
 Ссылка:
 https://github.com/culturegod93/project2

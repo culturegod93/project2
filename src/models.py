@@ -1,89 +1,69 @@
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Any, Dict, List
 
 
 class Product:
     def __init__(
         self, name: str, description: str, price: float, quantity: int
     ) -> None:
-        self.name: str = name
-        self.description: str = description
-        self._price: float = price  # приватный атрибут
-        self.quantity: int = quantity
+        self.name = name
+        self.description = description
+        self.__price = float(price)
+        self.quantity = int(quantity)
 
     @property
     def price(self) -> float:
-        return self._price
+        """Геттер для приватного атрибута цены"""
+        return self.__price
 
     @price.setter
     def price(self, new_price: float) -> None:
-        if new_price <= 0:
+        """Сеттер для цены: проверка на положительность"""
+        if new_price > 0:
+            self.__price = float(new_price)
+        else:
             print("Цена не должна быть нулевая или отрицательная")
-            return
-        if new_price < self._price:
-            confirm = input(
-                f"Вы хотите снизить цену с {self._price} до {new_price}? (y/n): "
-            )
-            if confirm.lower() != "y":
-                return
-        self._price = new_price
 
     @classmethod
-    def new_product(
-        cls, data: dict[str, object], products_list: Optional[List[Product]] = None
-    ) -> Product:
-        name = str(data["name"])
-        description = str(data["description"])
+    def new_product(cls, data: Dict[str, Any]) -> Product:
+        return cls(
+            name=data["name"],
+            description=data["description"],
+            price=float(data["price"]),
+            quantity=int(data["quantity"]),
+        )
 
-        price_raw = data["price"]
-        quantity_raw = data["quantity"]
-
-        if isinstance(price_raw, (int, float, str)):
-            price = float(price_raw)
-        else:
-            raise TypeError(
-                f"price должно быть float/int/str, получено {type(price_raw)}"
-            )
-
-        if isinstance(quantity_raw, (int, str)):
-            quantity = int(quantity_raw)
-        else:
-            raise TypeError(
-                f"quantity должно быть int/str, получено {type(quantity_raw)}"
-            )
-
-        if products_list is not None:
-            for prod in products_list:
-                if prod.name == name:
-                    prod.quantity += quantity
-                    if price > prod.price:
-                        prod.price = price
-                    return prod
-        return cls(name, description, price, quantity)
+    def __str__(self) -> str:
+        return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
 
 
 class Category:
-    category_count: int = 0
-    product_count: int = 0
+    category_count = 0
+    product_count = 0
 
     def __init__(
-        self, name: str, description: str, products: Optional[List[Product]] = None
+        self, name: str, description: str, products: List[Product] | None = None
     ) -> None:
-        self.name: str = name
-        self.description: str = description
-        self._products: List[Product] = products if products is not None else []
+        self.name = name
+        self.description = description
+        self.__products: List[Product] = products or []
 
         Category.category_count += 1
-        Category.product_count += len(self._products)
-
-    def add_product(self, product: Product) -> None:
-        self._products.append(product)
-        Category.product_count += 1
+        Category.product_count += len(self.__products)
 
     @property
     def products(self) -> str:
-        result = ""
-        for prod in self._products:
-            result += f"{prod.name}, {prod.price} руб. Остаток: {prod.quantity} шт.\n"
-        return result
+        return "".join(
+            [
+                f"{p.name}, {p.price} руб. Остаток: {p.quantity} шт.\n"
+                for p in self.__products
+            ]
+        )
+
+    def add_product(self, product: Product) -> None:
+        self.__products.append(product)
+        Category.product_count += 1
+
+    def __str__(self) -> str:
+        return f"{self.name} ({len(self.__products)} товаров)"

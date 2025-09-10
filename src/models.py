@@ -1,69 +1,112 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Union
 
 
 class Product:
+    """
+    Класс для описания продукта.
+    """
+
+    name: str
+    description: str
+    price: float
+    quantity: int
+
     def __init__(
         self, name: str, description: str, price: float, quantity: int
     ) -> None:
+        if price <= 0:
+            raise ValueError("Цена должна быть положительной")
+        if quantity < 0:
+            raise ValueError("Количество не может быть отрицательным")
+
         self.name = name
         self.description = description
-        self.__price = float(price)
-        self.quantity = int(quantity)
-
-    @property
-    def price(self) -> float:
-        """Геттер для приватного атрибута цены"""
-        return self.__price
-
-    @price.setter
-    def price(self, new_price: float) -> None:
-        """Сеттер для цены: проверка на положительность"""
-        if new_price > 0:
-            self.__price = float(new_price)
-        else:
-            print("Цена не должна быть нулевая или отрицательная")
-
-    @classmethod
-    def new_product(cls, data: Dict[str, Any]) -> Product:
-        return cls(
-            name=data["name"],
-            description=data["description"],
-            price=float(data["price"]),
-            quantity=int(data["quantity"]),
-        )
+        self.price = price
+        self.quantity = quantity
 
     def __str__(self) -> str:
         return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
 
+    def __add__(self, other: Product) -> float:
+        """
+        Складываем стоимость товаров (цена * количество).
+        """
+        if not isinstance(other, Product):
+            raise TypeError("Можно складывать только продукты")
+        return self.price * self.quantity + other.price * other.quantity
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Product):
+            return False
+        return (
+            self.name == other.name
+            and self.description == other.description
+            and self.price == other.price
+            and self.quantity == other.quantity
+        )
+
+    @classmethod
+    def new_product(
+        cls, data: dict[str, Union[str, float, int]], products_list: list[Product]
+    ) -> Product:
+        """
+        Создаёт продукт или увеличивает количество, если он уже есть.
+        """
+        for product in products_list:
+            if (
+                product.name == data["name"]
+                and product.description == data["description"]
+            ):
+                product.quantity += int(data["quantity"])
+                product.price = float(data["price"])  # обновляем цену
+                return product
+        return cls(
+            str(data["name"]),
+            str(data["description"]),
+            float(data["price"]),
+            int(data["quantity"]),
+        )
+
 
 class Category:
-    category_count = 0
-    product_count = 0
+    """
+    Класс для описания категории товаров.
+    """
+
+    name: str
+    description: str
+    __products: list[Product]
 
     def __init__(
-        self, name: str, description: str, products: List[Product] | None = None
+        self,
+        name: str,
+        description: str,
+        products: list[Union[Product, tuple[str, str, float, int]]],
     ) -> None:
         self.name = name
         self.description = description
-        self.__products: List[Product] = products or []
+        self.__products: list[Product] = []
 
-        Category.category_count += 1
-        Category.product_count += len(self.__products)
+        for product in products:
+            if isinstance(product, Product):
+                self.__products.append(product)
+            elif isinstance(product, tuple):
+                title, description, price, quantity = product
+                self.__products.append(
+                    Product(str(title), str(description), float(price), int(quantity))
+                )
+            else:
+                raise TypeError("Продукты должны быть Product или tuple")
+
+    def __str__(self) -> str:
+        return f"{self.name}, количество продуктов: {len(self.__products)}"
 
     @property
     def products(self) -> str:
-        return "".join(
-            [
-                f"{p.name}, {p.price} руб. Остаток: {p.quantity} шт.\n"
-                for p in self.__products
-            ]
-        )
+        return "\n".join(str(p) for p in self.__products)
 
-    def add_product(self, product: Product) -> None:
-        self.__products.append(product)
-        Category.product_count += 1
-
-    def __str__(self) -> str:
-        return f"{self.name} ({len(self.__products)} товаров)"
+    @property
+    def products_list(self) -> list[Product]:
+        return self.__products

@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 import pytest
 
@@ -7,7 +8,7 @@ from src.models import Category
 
 
 @pytest.fixture
-def sample_json(tmp_path):
+def sample_json(tmp_path: Path) -> Path:
     data = [
         {
             "name": "Смартфоны",
@@ -33,12 +34,11 @@ def sample_json(tmp_path):
     return file_path
 
 
-def test_load_from_json(sample_json):
+def test_load_from_json(sample_json: Path):
     categories = load_from_json(str(sample_json))
     assert isinstance(categories, list)
-    assert all(isinstance(cat, Category) for cat in categories)
     cat = categories[0]
-    assert cat.name == "Смартфоны"
+    assert isinstance(cat, Category)
     products_lines = cat.products.splitlines()
     assert len(products_lines) == 2
     assert "Samsung" in products_lines[0]

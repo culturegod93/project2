@@ -1,3 +1,4 @@
+from src.loader import load_from_json
 from src.models import Category, Product
 
 if __name__ == "__main__":
@@ -15,8 +16,33 @@ if __name__ == "__main__":
         [product1, product2, product3],
     )
 
+    # Демонстрация новых возможностей
+    print("=== ДЕМОНСТРАЦИЯ МАГИЧЕСКИХ МЕТОДОВ ===")
+
+    # Выводим строковое представление категории
+    print("Строковое представление категории:")
+    print(category1)
+    print()
+
+    # Выводим строковое представление продукта
+    print("Строковое представление продукта:")
+    print(product1)
+    print()
+
+    # Демонстрация сложения продуктов
+    print("Сложение продуктов (общая стоимость):")
+    total_value = product1 + product2
+    print(f"Суммарная стоимость {product1.name} и {product2.name}: {total_value} руб.")
+    print()
+
+    # Демонстрация итерации по категории
+    print("Итерация по продуктам категории:")
+    for product in category1:
+        print(f"  - {product}")
+    print()
+
     # Выводим список товаров категории через геттер
-    print("Категория Смартфоны:")
+    print("Список товаров категории через геттер:")
     print(category1.products)
 
     # Добавляем новый продукт через метод add_product
@@ -25,6 +51,7 @@ if __name__ == "__main__":
     print("После добавления нового продукта:")
     print(category1.products)
     print(f"Общее количество продуктов: {Category.product_count}")
+    print(f"Количество категорий: {Category.category_count}")
 
     # Создаем продукт через classmethod new_product
     new_product = Product.new_product(
@@ -36,9 +63,7 @@ if __name__ == "__main__":
         }
     )
     print("Создан новый продукт через new_product:")
-    print(
-        f"{new_product.name}, {new_product.description}, {new_product.price} руб., {new_product.quantity} шт."
-    )
+    print(new_product)
 
     # Тестируем сеттер цены
     print("\nИзменяем цену продукта:")
@@ -50,3 +75,15 @@ if __name__ == "__main__":
     print(f"Цена после попытки установить -100: {new_product.price} руб.")
     new_product.price = 0
     print(f"Цена после попытки установить 0: {new_product.price} руб.")
+
+    # Демонстрация загрузки из JSON
+    print("\n=== ДЕМОНСТРАЦИЯ ЗАГРУЗКИ ИЗ JSON ===")
+    try:
+        categories = load_from_json("data/products.json")
+        for category in categories:
+            print(category)
+            for product in category:
+                print(f"  - {product}")
+    except Exception as e:
+        print(f"Ошибка при загрузке из JSON: {e}")
+        print("Создайте файл data/products.json для тестирования этой функции")

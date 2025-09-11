@@ -1,89 +1,118 @@
-from src.loader import load_from_json
-from src.models import Category, Product
+from src.models import Category, LawnGrass, Product, Smartphone
 
 if __name__ == "__main__":
-    # Создаем продукты
-    product1 = Product(
-        "Samsung Galaxy S23 Ultra", "256GB, Серый цвет, 200MP камера", 180000.0, 5
+    # Создаем смартфоны
+    smartphone1 = Smartphone(
+        "Samsung Galaxy S23 Ultra",
+        "256GB, Серый цвет, 200MP камера",
+        180000.0,
+        5,
+        95.5,
+        "S23 Ultra",
+        256,
+        "Серый",
     )
-    product2 = Product("Iphone 15", "512GB, Gray space", 210000.0, 8)
-    product3 = Product("Xiaomi Redmi Note 11", "1024GB, Синий", 31000.0, 14)
-
-    # Создаем категорию с продуктами
-    category1 = Category(
-        "Смартфоны",
-        "Смартфоны, как средство не только коммуникации, но и получения дополнительных функций для удобства жизни",
-        [product1, product2, product3],
+    smartphone2 = Smartphone(
+        "Iphone 15", "512GB, Gray space", 210000.0, 8, 98.2, "15", 512, "Gray space"
+    )
+    smartphone3 = Smartphone(
+        "Xiaomi Redmi Note 11",
+        "1024GB, Синий",
+        31000.0,
+        14,
+        90.3,
+        "Note 11",
+        1024,
+        "Синий",
     )
 
-    # Демонстрация новых возможностей
-    print("=== ДЕМОНСТРАЦИЯ МАГИЧЕСКИХ МЕТОДОВ ===")
+    # Выводим информацию о смартфонах
+    print("=== ИНФОРМАЦИЯ О СМАРТФОНАХ ===")
+    print(smartphone1)
+    print(smartphone2)
+    print(smartphone3)
 
-    # Выводим строковое представление категории
-    print("Строковое представление категории:")
-    print(category1)
-    print()
-
-    # Выводим строковое представление продукта
-    print("Строковое представление продукта:")
-    print(product1)
-    print()
-
-    # Демонстрация сложения продуктов
-    print("Сложение продуктов (общая стоимость):")
-    total_value = product1 + product2
-    print(f"Суммарная стоимость {product1.name} и {product2.name}: {total_value} руб.")
-    print()
-
-    # Демонстрация итерации по категории
-    print("Итерация по продуктам категории:")
-    for product in category1:
-        print(f"  - {product}")
-    print()
-
-    # Выводим список товаров категории через геттер
-    print("Список товаров категории через геттер:")
-    print(category1.products)
-
-    # Добавляем новый продукт через метод add_product
-    product4 = Product('55" QLED 4K', "Фоновая подсветка", 123000.0, 7)
-    category1.add_product(product4)
-    print("После добавления нового продукта:")
-    print(category1.products)
-    print(f"Общее количество продуктов: {Category.product_count}")
-    print(f"Количество категорий: {Category.category_count}")
-
-    # Создаем продукт через classmethod new_product
-    new_product = Product.new_product(
-        {
-            "name": "Samsung Galaxy S23 Ultra",
-            "description": "256GB, Серый цвет, 200MP камера",
-            "price": 180000.0,
-            "quantity": 5,
-        }
+    # Создаем газонную траву
+    grass1 = LawnGrass(
+        "Газонная трава",
+        "Элитная трава для газона",
+        500.0,
+        20,
+        "Россия",
+        "7 дней",
+        "Зеленый",
     )
-    print("Создан новый продукт через new_product:")
-    print(new_product)
+    grass2 = LawnGrass(
+        "Газонная трава 2",
+        "Выносливая трава",
+        450.0,
+        15,
+        "США",
+        "5 дней",
+        "Темно-зеленый",
+    )
 
-    # Тестируем сеттер цены
-    print("\nИзменяем цену продукта:")
-    new_product.price = 800
-    print(f"Новая цена: {new_product.price} руб.")
+    # Выводим информацию о газонной траве
+    print("\n=== ИНФОРМАЦИЯ О ГАЗОННОЙ ТРАВЕ ===")
+    print(grass1)
+    print(grass2)
 
-    # Попытка установить отрицательную цену
-    new_product.price = -100
-    print(f"Цена после попытки установить -100: {new_product.price} руб.")
-    new_product.price = 0
-    print(f"Цена после попытки установить 0: {new_product.price} руб.")
+    # Демонстрация сложения товаров одного типа
+    print("\n=== СЛОЖЕНИЕ ТОВАРОВ ОДНОГО ТИПА ===")
+    smartphone_sum = smartphone1 + smartphone2
+    print(f"Суммарная стоимость смартфонов: {smartphone_sum} руб.")
 
-    # Демонстрация загрузки из JSON
-    print("\n=== ДЕМОНСТРАЦИЯ ЗАГРУЗКИ ИЗ JSON ===")
+    grass_sum = grass1 + grass2
+    print(f"Суммарная стоимость газонной травы: {grass_sum} руб.")
+
+    # Демонстрация ошибки при сложении товаров разных типов
+    print("\n=== ПОПЫТКА СЛОЖЕНИЯ ТОВАРОВ РАЗНЫХ ТИПОВ ===")
     try:
-        categories = load_from_json("data/products.json")
-        for category in categories:
-            print(category)
-            for product in category:
-                print(f"  - {product}")
-    except Exception as e:
-        print(f"Ошибка при загрузке из JSON: {e}")
-        print("Создайте файл data/products.json для тестирования этой функции")
+        invalid_sum = smartphone1 + grass1
+        print(f"Результат сложения: {invalid_sum} руб.")
+    except TypeError as e:
+        print(f"Ошибка: {e}")
+
+    # Создаем категории
+    print("\n=== СОЗДАНИЕ КАТЕГОРИЙ ===")
+    category_smartphones = Category(
+        "Смартфоны", "Высокотехнологичные смартфоны", [smartphone1, smartphone2]
+    )
+    category_grass = Category(
+        "Газонная трава", "Различные виды газонной травы", [grass1, grass2]
+    )
+
+    # Добавляем продукты в категории
+    category_smartphones.add_product(smartphone3)
+    print("Продукты в категории 'Смартфоны':")
+    print(category_smartphones.products)
+
+    print(f"Общее количество продуктов: {Category.product_count}")
+
+    # Демонстрация ошибки при добавлении не-продукта
+    print("\n=== ПОПЫТКА ДОБАВЛЕНИЯ НЕ-ПРОДУКТА ===")
+    try:
+        category_smartphones.add_product("Not a product")  # type: ignore
+        print("Не-продукт успешно добавлен")
+    except TypeError as e:
+        print(f"Ошибка: {e}")
+
+    # Демонстрация работы с обычными продуктами
+    print("\n=== РАБОТА С ОБЫЧНЫМИ ПРОДУКТАМИ ===")
+    regular_product = Product("Обычный товар", "Просто товар", 1000.0, 10)
+    print(regular_product)
+
+    # Проверка сложения обычных продуктов
+    regular_product2 = Product("Другой товар", "Еще товар", 500.0, 5)
+    try:
+        regular_sum = regular_product + regular_product2
+        print(f"Сумма обычных товаров: {regular_sum} руб.")
+    except TypeError as e:
+        print(f"Ошибка при сложении обычных товаров: {e}")
+
+    # Проверка, что нельзя сложить обычный товар и смартфон
+    try:
+        mixed_sum = regular_product + smartphone1
+        print(f"Сумма обычного товара и смартфона: {mixed_sum} руб.")
+    except TypeError as e:
+        print(f"Ошибка при сложении разных типов: {e}")

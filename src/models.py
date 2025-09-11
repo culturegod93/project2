@@ -5,7 +5,7 @@ from typing import Dict, Iterator, List, Union
 
 class Product:
     """
-    Класс товара.
+    Базовый класс товара.
     Атрибуты:
         name: название
         description: описание
@@ -72,11 +72,78 @@ class Product:
     def __add__(self, other: Product) -> float:
         """
         Сложение двух товаров — возвращает суммарную стоимость (price * quantity).
-        Если other не Product — возвращает NotImplemented.
+        Если other не того же типа — выбрасывает TypeError.
         """
-        if not isinstance(other, Product):
-            return NotImplemented
+        if type(self) is not type(other):  # Изменено с != на is not
+            raise TypeError("Нельзя складывать товары разных типов")
         return float(self.price * self.quantity + other.price * other.quantity)
+
+
+class Smartphone(Product):
+    """
+    Класс Смартфон, наследник Product.
+    Дополнительные атрибуты:
+        efficiency: производительность
+        model: модель
+        memory: объем встроенной памяти
+        color: цвет
+    """
+
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        price: float,
+        quantity: int,
+        efficiency: float,
+        model: str,
+        memory: int,
+        color: str,
+    ) -> None:
+        super().__init__(name, description, price, quantity)
+        self.efficiency: float = efficiency
+        self.model: str = model
+        self.memory: int = memory
+        self.color: str = color
+
+    def __str__(self) -> str:
+        """Строковое представление смартфона."""
+        return (
+            f"{self.name}, {self.model}, {self.memory}GB, {self.color}, "
+            f"{int(self.price)} руб. Остаток: {self.quantity} шт."
+        )
+
+
+class LawnGrass(Product):
+    """
+    Класс Трава газонная, наследник Product.
+    Дополнительные атрибуты:
+        country: страна-производитель
+        germination_period: срок прорастания
+        color: цвет
+    """
+
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        price: float,
+        quantity: int,
+        country: str,
+        germination_period: str,
+        color: str,
+    ) -> None:
+        super().__init__(name, description, price, quantity)
+        self.country: str = country
+        self.germination_period: str = germination_period
+        self.color: str = color
+
+    def __str__(self) -> str:
+        """Строковое представление газонной травы."""
+        return (
+            f"{self.name}, {self.country}, {self.germination_period}, {self.color}, "
+            f"{int(self.price)} руб. Остаток: {self.quantity} шт."
+        )
 
 
 class Category:
@@ -109,7 +176,7 @@ class Category:
     def add_product(self, product: Product) -> None:
         """Добавить продукт в категорию (и увеличить product_count)."""
         if not isinstance(product, Product):
-            raise TypeError("product must be Product")
+            raise TypeError("Можно добавлять только объекты Product и его наследников")
         self._products.append(product)
         Category.product_count += 1
 
@@ -119,10 +186,7 @@ class Category:
         Геттер, возвращающий строку со всеми продуктами в формате:
         "Название продукта, X руб. Остаток: X шт.\n"
         """
-        return "".join(
-            f"{p.name}, {int(p.price)} руб. Остаток: {p.quantity} шт.\n"
-            for p in self._products
-        )
+        return "".join(f"{p}\n" for p in self._products)
 
     def __str__(self) -> str:
         """Возвращает строку с подсчётом общего количества товаров в данной категории."""

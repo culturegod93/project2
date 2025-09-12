@@ -1,13 +1,174 @@
 import pytest
 
-from src.models import Category, LawnGrass, Product, Smartphone
+from src.models import (BaseProduct, Category, LawnGrass, LogCreationMixin,
+                        Product, Smartphone)
 
 
-class TestSmartphone:
-    """Тесты для класса Smartphone"""
+class TestBaseProduct:
+    """Тесты для абстрактного базового класса BaseProduct"""
 
-    def test_smartphone_creation(self):
-        """Тест создания смартфона"""
+    def test_base_product_is_abstract(self):
+        """Тест, что BaseProduct является абстрактным классом"""
+        with pytest.raises(TypeError):
+            BaseProduct("Test", "Test", 100.0, 5)
+
+
+class TestLogCreationMixin:
+    """Тесты для миксина LogCreationMixin"""
+
+    def test_log_creation_output(self, capsys):
+        """Тест вывода информации при создании объекта"""
+
+        class TestClass(LogCreationMixin):
+            def __init__(self, name, value):
+                super().__init__(name, value)
+                self.name = name
+                self.value = value
+                self.__post_init__()
+
+        _ = TestClass("Test", 123)
+        captured = capsys.readouterr()
+
+        assert "TestClass" in captured.out
+        assert "'Test'" in captured.out
+        assert "123" in captured.out
+
+    def test_repr_method(self):
+        """Тест метода __repr__"""
+
+        class TestClass(LogCreationMixin):
+            def __init__(self, name, value):
+                super().__init__(name, value)
+                self.name = name
+                self.value = value
+
+            def __post_init__(self):
+                pass
+
+        test_obj = TestClass("Test", 123)
+        repr_str = repr(test_obj)
+
+        assert "TestClass" in repr_str
+        assert "name='Test'" in repr_str
+        assert "value=123" in repr_str
+
+
+class TestProductWithMixin:
+    """Тесты для Product с миксином"""
+
+    def test_product_creation_output(self, capsys):
+        """Тест вывода информации при создании Product"""
+        _ = Product("Test Product", "Test Description", 100.0, 5)
+        captured = capsys.readouterr()
+
+        assert "Product" in captured.out
+        assert "'Test Product'" in captured.out
+        assert "'Test Description'" in captured.out
+        assert "100.0" in captured.out
+        assert "5" in captured.out
+
+    def test_product_repr(self):
+        """Тест метода __repr__ для Product"""
+        product = Product("Test Product", "Test Description", 100.0, 5)
+        repr_str = repr(product)
+
+        assert "Product" in repr_str
+        assert "name='Test Product'" in repr_str
+        assert "description='Test Description'" in repr_str
+        assert "_price=100.0" not in repr_str  # Приватные поля не должны отображаться
+        assert "quantity=5" in repr_str
+
+
+class TestInheritanceWithMixin:
+    """Тесты наследования с миксином"""
+
+    def test_smartphone_creation_output(self, capsys):
+        """Тест вывода информации при создании Smartphone"""
+        _ = Smartphone(
+            "Test Phone",
+            "Test Description",
+            1000.0,
+            5,
+            95.5,
+            "Test Model",
+            256,
+            "Black",
+        )
+        captured = capsys.readouterr()
+
+        assert "Smartphone" in captured.out
+        assert "'Test Phone'" in captured.out
+
+    def test_lawn_grass_creation_output(self, capsys):
+        """Тест вывода информации при создании LawnGrass"""
+        _ = LawnGrass(
+            "Test Grass", "Test Description", 500.0, 10, "Russia", "7 days", "Green"
+        )
+        captured = capsys.readouterr()
+
+        assert "LawnGrass" in captured.out
+        assert "'Test Grass'" in captured.out
+
+    def test_new_product_missing_fields(self):
+        """Тест создания продукта с отсутствующими полями"""
+        data = {
+            "name": "Test Product"
+            # Нет price и quantity
+        }
+        with pytest.raises(Exception):
+            Product.new_product(data)
+
+    def test_price_setter_negative(self, capsys):
+        """Тест установки отрицательной цены"""
+        product = Product("Test", "Desc", 100.0, 5)
+        product.price = -50.0
+        captured = capsys.readouterr()
+        assert "Цена не должна быть нулевая или отрицательная" in captured.out
+        assert product.price == 100.0
+
+    def test_price_setter_zero(self, capsys):
+        """Тест установки нулевой цены"""
+        product = Product("Test", "Desc", 100.0, 5)
+        product.price = 0.0
+        captured = capsys.readouterr()
+        assert "Цена не должна быть нулевая или отрицательная" in captured.out
+        assert product.price == 100.0
+
+    def test_price_setter_string(self, capsys):
+        """Тест установки строки в качестве цены"""
+        product = Product("Test", "Desc", 100.0, 5)
+        product.price = "not a number"
+        captured = capsys.readouterr()
+        assert "Цена должна быть числом" in captured.out
+        assert product.price == 100.0
+
+    def test_addition_different_types(self):
+        """Тест сложения продуктов разных типов"""
+        product = Product("Product", "Desc", 100.0, 5)
+        smartphone = Smartphone(
+            "Smartphone", "Desc", 1000.0, 2, 90.0, "Model", 128, "Black"
+        )
+
+        with pytest.raises(TypeError):
+            product + smartphone
+
+    def test_add_non_product_to_category(self):
+        """Тест добавления не-продукта в категорию"""
+        category = Category("Test Category", "Test Description")
+
+        with pytest.raises(TypeError):
+            category.add_product("not a product")
+
+    def test_product_repr(self):
+        """Тест метода __repr__ для Product"""
+        product = Product("Test Product", "Test Description", 100.0, 5)
+        repr_str = repr(product)
+        assert "Product" in repr_str
+        assert "name='Test Product'" in repr_str
+        assert "description='Test Description'" in repr_str
+
+    def test_smartphone_repr(self):
+        """Тест метода __repr__ для Smartphone"""
         smartphone = Smartphone(
             "Test Phone",
             "Test Description",
@@ -18,142 +179,15 @@ class TestSmartphone:
             256,
             "Black",
         )
-        assert smartphone.name == "Test Phone"
-        assert smartphone.description == "Test Description"
-        assert smartphone.price == 1000.0
-        assert smartphone.quantity == 5
-        assert smartphone.efficiency == 95.5
-        assert smartphone.model == "Test Model"
-        assert smartphone.memory == 256
-        assert smartphone.color == "Black"
+        repr_str = repr(smartphone)
+        assert "Smartphone" in repr_str
+        assert "name='Test Phone'" in repr_str
 
-    def test_smartphone_str(self):
-        """Тест строкового представления смартфона"""
-        smartphone = Smartphone(
-            "Test Phone",
-            "Test Description",
-            1000.0,
-            5,
-            95.5,
-            "Test Model",
-            256,
-            "Black",
-        )
-        assert "Test Phone" in str(smartphone)
-        assert "Test Model" in str(smartphone)
-        assert "256" in str(smartphone)
-        assert "Black" in str(smartphone)
-        assert "1000" in str(smartphone)
-        assert "5" in str(smartphone)
-
-
-class TestLawnGrass:
-    """Тесты для класса LawnGrass"""
-
-    def test_lawn_grass_creation(self):
-        """Тест создания газонной травы"""
+    def test_lawn_grass_repr(self):
+        """Тест метода __repr__ для LawnGrass"""
         grass = LawnGrass(
             "Test Grass", "Test Description", 500.0, 10, "Russia", "7 days", "Green"
         )
-        assert grass.name == "Test Grass"
-        assert grass.description == "Test Description"
-        assert grass.price == 500.0
-        assert grass.quantity == 10
-        assert grass.country == "Russia"
-        assert grass.germination_period == "7 days"
-        assert grass.color == "Green"
-
-    def test_lawn_grass_str(self):
-        """Тест строкового представления газонной травы"""
-        grass = LawnGrass(
-            "Test Grass", "Test Description", 500.0, 10, "Russia", "7 days", "Green"
-        )
-        assert "Test Grass" in str(grass)
-        assert "Russia" in str(grass)
-        assert "7 days" in str(grass)
-        assert "Green" in str(grass)
-        assert "500" in str(grass)
-        assert "10" in str(grass)
-
-
-class TestProductAddition:
-    """Тесты для сложения продуктов"""
-
-    def test_smartphone_addition(self):
-        """Тест сложения смартфонов"""
-        phone1 = Smartphone(
-            "Phone 1", "Desc 1", 1000.0, 2, 90.0, "Model 1", 128, "Black"
-        )
-        phone2 = Smartphone(
-            "Phone 2", "Desc 2", 1500.0, 3, 95.0, "Model 2", 256, "White"
-        )
-        result = phone1 + phone2
-        expected = 1000.0 * 2 + 1500.0 * 3  # 2000 + 4500 = 6500
-        assert result == expected
-
-    def test_lawn_grass_addition(self):
-        """Тест сложения газонной травы"""
-        grass1 = LawnGrass("Grass 1", "Desc 1", 100.0, 5, "Russia", "7 days", "Green")
-        grass2 = LawnGrass("Grass 2", "Desc 2", 150.0, 3, "USA", "5 days", "Dark Green")
-        result = grass1 + grass2
-        expected = 100.0 * 5 + 150.0 * 3  # 500 + 450 = 950
-        assert result == expected
-
-    def test_different_types_addition(self):
-        """Тест попытки сложения разных типов продуктов"""
-        phone = Smartphone("Phone", "Desc", 1000.0, 2, 90.0, "Model", 128, "Black")
-        grass = LawnGrass("Grass", "Desc", 100.0, 5, "Russia", "7 days", "Green")
-
-        with pytest.raises(TypeError):
-            phone + grass  # Убрано присваивание result
-
-    def test_product_and_smartphone_addition(self):
-        """Тест попытки сложения Product и Smartphone"""
-        product = Product("Product", "Desc", 100.0, 2)
-        phone = Smartphone("Phone", "Desc", 1000.0, 2, 90.0, "Model", 128, "Black")
-
-        with pytest.raises(TypeError):
-            product + phone  # Убрано присваивание result
-
-    def test_product_and_lawn_grass_addition(self):
-        """Тест попытки сложения Product и LawnGrass"""
-        product = Product("Product", "Desc", 100.0, 2)
-        grass = LawnGrass("Grass", "Desc", 100.0, 5, "Russia", "7 days", "Green")
-
-        with pytest.raises(TypeError):
-            product + grass  # Убрано присваивание result
-
-
-class TestCategoryAddProduct:
-    """Тесты для добавления продуктов в категорию"""
-
-    def test_add_smartphone_to_category(self):
-        """Тест добавления смартфона в категорию"""
-        category = Category("Test Category", "Test Description")
-        phone = Smartphone("Phone", "Desc", 1000.0, 2, 90.0, "Model", 128, "Black")
-
-        category.add_product(phone)
-        assert len(list(category)) == 1
-
-    def test_add_lawn_grass_to_category(self):
-        """Тест добавления газонной травы в категорию"""
-        category = Category("Test Category", "Test Description")
-        grass = LawnGrass("Grass", "Desc", 100.0, 5, "Russia", "7 days", "Green")
-
-        category.add_product(grass)
-        assert len(list(category)) == 1
-
-    def test_add_regular_product_to_category(self):
-        """Тест добавления обычного продукта в категорию"""
-        category = Category("Test Category", "Test Description")
-        product = Product("Product", "Desc", 100.0, 2)
-
-        category.add_product(product)
-        assert len(list(category)) == 1
-
-    def test_add_invalid_product_to_category(self):
-        """Тест попытки добавления не-продукта в категорию"""
-        category = Category("Test Category", "Test Description")
-
-        with pytest.raises(TypeError):
-            category.add_product("Not a product")
+        repr_str = repr(grass)
+        assert "LawnGrass" in repr_str
+        assert "name='Test Grass'" in repr_str

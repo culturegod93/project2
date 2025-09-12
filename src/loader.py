@@ -26,21 +26,21 @@ def load_from_json(path: str) -> List[Category]:
 
     categories: List[Category] = []
     for item in data:
-        products = []
-        for p in item.get("products", []):
-            try:
-                product_data = {
-                    "name": str(p["name"]),
-                    "description": str(p.get("description", "")),
-                    "price": float(str(p["price"])),
-                    "quantity": int(str(p["quantity"])),
-                }
-                products.append(Product.new_product(product_data))
-            except (KeyError, ValueError, TypeError) as e:
-                print(f"Ошибка при создании продукта: {e}")
-                continue
-
         try:
+            products = []
+            for p in item.get("products", []):
+                try:
+                    product_data = {
+                        "name": str(p["name"]),
+                        "description": str(p.get("description", "")),
+                        "price": float(str(p["price"])),
+                        "quantity": int(str(p["quantity"])),
+                    }
+                    products.append(Product.new_product(product_data))
+                except (KeyError, ValueError, TypeError) as e:
+                    print(f"Ошибка при создании продукта: {e}")
+                    continue
+
             categories.append(
                 Category(str(item["name"]), str(item.get("description", "")), products)
             )

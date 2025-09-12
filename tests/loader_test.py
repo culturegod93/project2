@@ -107,3 +107,56 @@ class TestLoader:
             assert "Ошибка при создании продукта" in captured.out
         finally:
             os.unlink(temp_path)
+
+    def test_load_from_json_invalid_category(self, capsys):
+        """Тест загрузки из JSON с невалидными данными категории"""
+        # Создаем временный файл с отсутствующим полем name у категории
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            json_data = [
+                {
+                    # Пропущено поле "name"
+                    "description": "Test Description",
+                    "products": [],
+                }
+            ]
+            json.dump(json_data, f)
+            temp_path = f.name
+
+        try:
+            categories = load_from_json(temp_path)
+            captured = capsys.readouterr()
+            assert len(categories) == 0
+            assert "Ошибка при обработке данных категории" in captured.out
+        finally:
+            os.unlink(temp_path)
+
+    def test_load_from_json_invalid_product_data(self, capsys):
+        """Тест загрузки из JSON с невалидными данными продукта"""
+        # Создаем временный файл с продуктом, у которого отсутствует поле price
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            json_data = [
+                {
+                    "name": "Test Category",
+                    "description": "Test Description",
+                    "products": [
+                        {
+                            "name": "Test Product",
+                            "description": "Test Description",
+                            # Пропущено price
+                            "quantity": 5,
+                        }
+                    ],
+                }
+            ]
+            json.dump(json_data, f)
+            temp_path = f.name
+
+        try:
+            categories = load_from_json(temp_path)
+            captured = capsys.readouterr()
+            # Категория должна быть создана, но без продуктов
+            assert len(categories) == 1
+            assert len(list(categories[0])) == 0
+            assert "Ошибка при создании продукта" in captured.out
+        finally:
+            os.unlink(temp_path)

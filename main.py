@@ -1,118 +1,66 @@
 from src.models import Category, LawnGrass, Product, Smartphone
 
 if __name__ == "__main__":
-    # Создаем смартфоны
-    smartphone1 = Smartphone(
-        "Samsung Galaxy S23 Ultra",
-        "256GB, Серый цвет, 200MP камера",
-        180000.0,
-        5,
-        95.5,
-        "S23 Ultra",
-        256,
-        "Серый",
+    # Создаем продукты - будет выведена информация о создании
+    product1 = Product(
+        "Samsung Galaxy S23 Ultra", "256GB, Серый цвет, 200MP камера", 180000.0, 5
     )
-    smartphone2 = Smartphone(
-        "Iphone 15", "512GB, Gray space", 210000.0, 8, 98.2, "15", 512, "Gray space"
-    )
-    smartphone3 = Smartphone(
-        "Xiaomi Redmi Note 11",
-        "1024GB, Синий",
-        31000.0,
-        14,
-        90.3,
-        "Note 11",
-        1024,
-        "Синий",
-    )
+    product2 = Product("Iphone 15", "512GB, Gray space", 210000.0, 8)
+    product3 = Product("Xiaomi Redmi Note 11", "1024GB, Синий", 31000.0, 14)
 
-    # Выводим информацию о смартфонах
-    print("=== ИНФОРМАЦИЯ О СМАРТФОНАХ ===")
-    print(smartphone1)
-    print(smartphone2)
-    print(smartphone3)
+    print(product1.name)
+    print(product1.description)
+    print(product1.price)
+    print(product1.quantity)
 
-    # Создаем газонную траву
-    grass1 = LawnGrass(
-        "Газонная трава",
-        "Элитная трава для газона",
-        500.0,
-        20,
-        "Россия",
-        "7 дней",
-        "Зеленый",
-    )
-    grass2 = LawnGrass(
-        "Газонная трава 2",
-        "Выносливая трава",
-        450.0,
-        15,
-        "США",
-        "5 дней",
-        "Темно-зеленый",
+    print(product2.name)
+    print(product2.description)
+    print(product2.price)
+    print(product2.quantity)
+
+    print(product3.name)
+    print(product3.description)
+    print(product3.price)
+    print(product3.quantity)
+
+    category1 = Category(
+        "Смартфоны",
+        "Смартфоны, как средство не только коммуникации, но и получения "
+        "дополнительных функций для удобства жизни",
+        [product1, product2, product3],
     )
 
-    # Выводим информацию о газонной траве
-    print("\n=== ИНФОРМАЦИЯ О ГАЗОННОЙ ТРАВЕ ===")
-    print(grass1)
-    print(grass2)
+    print(category1.name == "Смартфоны")
+    print(category1.description)
+    print(len(category1.products))
+    print(category1.category_count)
+    print(category1.product_count)
 
-    # Демонстрация сложения товаров одного типа
-    print("\n=== СЛОЖЕНИЕ ТОВАРОВ ОДНОГО ТИПА ===")
-    smartphone_sum = smartphone1 + smartphone2
-    print(f"Суммарная стоимость смартфонов: {smartphone_sum} руб.")
-
-    grass_sum = grass1 + grass2
-    print(f"Суммарная стоимость газонной травы: {grass_sum} руб.")
-
-    # Демонстрация ошибки при сложении товаров разных типов
-    print("\n=== ПОПЫТКА СЛОЖЕНИЯ ТОВАРОВ РАЗНЫХ ТИПОВ ===")
-    try:
-        invalid_sum = smartphone1 + grass1
-        print(f"Результат сложения: {invalid_sum} руб.")
-    except TypeError as e:
-        print(f"Ошибка: {e}")
-
-    # Создаем категории
-    print("\n=== СОЗДАНИЕ КАТЕГОРИЙ ===")
-    category_smartphones = Category(
-        "Смартфоны", "Высокотехнологичные смартфоны", [smartphone1, smartphone2]
-    )
-    category_grass = Category(
-        "Газонная трава", "Различные виды газонной травы", [grass1, grass2]
+    product4 = Product('55" QLED 4K', "Фоновая подсветка", 123000.0, 7)
+    category2 = Category(
+        "Телевизоры",
+        "Современный телевизор, который позволяет наслаждаться просмотром, "
+        "станет вашим другом и помощником",
+        [product4],
     )
 
-    # Добавляем продукты в категории
-    category_smartphones.add_product(smartphone3)
-    print("Продукты в категории 'Смартфоны':")
-    print(category_smartphones.products)
+    print(category2.name)
+    print(category2.description)
+    print(len(category2.products))
+    print(category2.products)
 
-    print(f"Общее количество продуктов: {Category.product_count}")
+    print(Category.category_count)
+    print(Category.product_count)
 
-    # Демонстрация ошибки при добавлении не-продукта
-    print("\n=== ПОПЫТКА ДОБАВЛЕНИЯ НЕ-ПРОДУКТА ===")
-    try:
-        category_smartphones.add_product("Not a product")  # type: ignore
-        print("Не-продукт успешно добавлен")
-    except TypeError as e:
-        print(f"Ошибка: {e}")
+    # Демонстрация работы миксина с наследниками
+    smartphone = Smartphone(
+        "Test Phone", "Test Description", 1000.0, 5, 95.5, "Test Model", 256, "Black"
+    )
+    grass = LawnGrass(
+        "Test Grass", "Test Description", 500.0, 10, "Russia", "7 days", "Green"
+    )
 
-    # Демонстрация работы с обычными продуктами
-    print("\n=== РАБОТА С ОБЫЧНЫМИ ПРОДУКТАМИ ===")
-    regular_product = Product("Обычный товар", "Просто товар", 1000.0, 10)
-    print(regular_product)
-
-    # Проверка сложения обычных продуктов
-    regular_product2 = Product("Другой товар", "Еще товар", 500.0, 5)
-    try:
-        regular_sum = regular_product + regular_product2
-        print(f"Сумма обычных товаров: {regular_sum} руб.")
-    except TypeError as e:
-        print(f"Ошибка при сложении обычных товаров: {e}")
-
-    # Проверка, что нельзя сложить обычный товар и смартфон
-    try:
-        mixed_sum = regular_product + smartphone1
-        print(f"Сумма обычного товара и смартфона: {mixed_sum} руб.")
-    except TypeError as e:
-        print(f"Ошибка при сложении разных типов: {e}")
+    # Демонстрация repr
+    print(repr(product1))
+    print(repr(smartphone))
+    print(repr(grass))

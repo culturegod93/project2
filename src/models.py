@@ -76,6 +76,12 @@ class LogCreationMixin:
         return f"{class_name}({params})"
 
 
+class ZeroQuantityError(ValueError):
+    """Пользовательское исключение для товаров с нулевым количеством."""
+
+    pass
+
+
 class Product(LogCreationMixin, BaseProduct):
     """
     Класс товара.
@@ -85,6 +91,12 @@ class Product(LogCreationMixin, BaseProduct):
     def __init__(
         self, name: str, description: str, price: float, quantity: int
     ) -> None:
+        # Проверяем количество товара
+        if quantity == 0:
+            raise ZeroQuantityError(
+                "Товар с нулевым количеством не может быть добавлен"
+            )
+
         # Инициализируем BaseProduct
         BaseProduct.__init__(self, name, description, price, quantity)
         # Инициализируем LogCreationMixin
@@ -246,10 +258,34 @@ class Category:
 
     def add_product(self, product: Product) -> None:
         """Добавить продукт в категорию (и увеличить product_count)."""
-        if not isinstance(product, Product):
-            raise TypeError("Можно добавлять только объекты Product и его наследников")
-        self._products.append(product)
-        Category.product_count += 1
+        try:
+            if not isinstance(product, Product):
+                raise TypeError(
+                    "Можно добавлять только объекты Product и его наследников"
+                )
+
+            if product.quantity == 0:
+                raise ZeroQuantityError("Нельзя добавить товар с нулевым количеством")
+
+            self._products.append(product)
+            Category.product_count += 1
+            print("Товар успешно добавлен")
+
+        except (TypeError, ZeroQuantityError) as e:
+            print(f"Ошибка при добавлении товара: {e}")
+        finally:
+            print("Обработка добавления товара завершена")
+
+    def middle_price(self) -> float:
+        """
+        Рассчитывает среднюю цену товаров в категории.
+        Возвращает 0, если в категории нет товаров.
+        """
+        try:
+            total_price = sum(product.price for product in self._products)
+            return total_price / len(self._products)
+        except ZeroDivisionError:
+            return 0
 
     @property
     def products(self) -> str:

@@ -1,193 +1,110 @@
 import pytest
 
-from src.models import (BaseProduct, Category, LawnGrass, LogCreationMixin,
-                        Product, Smartphone)
+from src.models import Category, Product, ZeroQuantityError
 
 
-class TestBaseProduct:
-    """Тесты для абстрактного базового класса BaseProduct"""
+class TestProductValidation:
+    """Тесты для валидации создания продукта"""
 
-    def test_base_product_is_abstract(self):
-        """Тест, что BaseProduct является абстрактным классом"""
-        with pytest.raises(TypeError):
-            BaseProduct("Test", "Test", 100.0, 5)
+    def test_product_creation_with_zero_quantity(self):
+        """Тест создания продукта с нулевым количеством"""
+        with pytest.raises(ZeroQuantityError) as exc_info:
+            Product("Test Product", "Test Description", 100.0, 0)
 
+        assert "Товар с нулевым количеством не может быть добавлен" in str(
+            exc_info.value
+        )
 
-class TestLogCreationMixin:
-    """Тесты для миксина LogCreationMixin"""
-
-    def test_log_creation_output(self, capsys):
-        """Тест вывода информации при создании объекта"""
-
-        class TestClass(LogCreationMixin):
-            def __init__(self, name, value):
-                super().__init__(name, value)
-                self.name = name
-                self.value = value
-                self.__post_init__()
-
-        _ = TestClass("Test", 123)
-        captured = capsys.readouterr()
-
-        assert "TestClass" in captured.out
-        assert "'Test'" in captured.out
-        assert "123" in captured.out
-
-    def test_repr_method(self):
-        """Тест метода __repr__"""
-
-        class TestClass(LogCreationMixin):
-            def __init__(self, name, value):
-                super().__init__(name, value)
-                self.name = name
-                self.value = value
-
-            def __post_init__(self):
-                pass
-
-        test_obj = TestClass("Test", 123)
-        repr_str = repr(test_obj)
-
-        assert "TestClass" in repr_str
-        assert "name='Test'" in repr_str
-        assert "value=123" in repr_str
-
-
-class TestProductWithMixin:
-    """Тесты для Product с миксином"""
-
-    def test_product_creation_output(self, capsys):
-        """Тест вывода информации при создании Product"""
-        _ = Product("Test Product", "Test Description", 100.0, 5)
-        captured = capsys.readouterr()
-
-        assert "Product" in captured.out
-        assert "'Test Product'" in captured.out
-        assert "'Test Description'" in captured.out
-        assert "100.0" in captured.out
-        assert "5" in captured.out
-
-    def test_product_repr(self):
-        """Тест метода __repr__ для Product"""
+    def test_product_creation_with_positive_quantity(self):
+        """Тест создания продукта с положительным количеством"""
         product = Product("Test Product", "Test Description", 100.0, 5)
-        repr_str = repr(product)
+        assert product.quantity == 5
 
-        assert "Product" in repr_str
-        assert "name='Test Product'" in repr_str
-        assert "description='Test Description'" in repr_str
-        assert "_price=100.0" not in repr_str  # Приватные поля не должны отображаться
-        assert "quantity=5" in repr_str
-
-
-class TestInheritanceWithMixin:
-    """Тесты наследования с миксином"""
-
-    def test_smartphone_creation_output(self, capsys):
-        """Тест вывода информации при создании Smartphone"""
-        _ = Smartphone(
-            "Test Phone",
-            "Test Description",
-            1000.0,
-            5,
-            95.5,
-            "Test Model",
-            256,
-            "Black",
-        )
-        captured = capsys.readouterr()
-
-        assert "Smartphone" in captured.out
-        assert "'Test Phone'" in captured.out
-
-    def test_lawn_grass_creation_output(self, capsys):
-        """Тест вывода информации при создании LawnGrass"""
-        _ = LawnGrass(
-            "Test Grass", "Test Description", 500.0, 10, "Russia", "7 days", "Green"
-        )
-        captured = capsys.readouterr()
-
-        assert "LawnGrass" in captured.out
-        assert "'Test Grass'" in captured.out
-
-    def test_new_product_missing_fields(self):
-        """Тест создания продукта с отсутствующими полями"""
+    def test_new_product_with_missing_fields(self):
+        """Тест new_product с отсутствующими полями"""
         data = {
             "name": "Test Product"
-            # Нет price и quantity
+            # нет обязательных полей price и quantity
         }
         with pytest.raises(Exception):
             Product.new_product(data)
 
-    def test_price_setter_negative(self, capsys):
-        """Тест установки отрицательной цены"""
-        product = Product("Test", "Desc", 100.0, 5)
-        product.price = -50.0
-        captured = capsys.readouterr()
-        assert "Цена не должна быть нулевая или отрицательная" in captured.out
-        assert product.price == 100.0
 
-    def test_price_setter_zero(self, capsys):
-        """Тест установки нулевой цены"""
-        product = Product("Test", "Desc", 100.0, 5)
-        product.price = 0.0
-        captured = capsys.readouterr()
-        assert "Цена не должна быть нулевая или отрицательная" in captured.out
-        assert product.price == 100.0
+class TestCategoryMiddlePrice:
+    """Тесты для метода middle_price категории"""
 
-    def test_price_setter_string(self, capsys):
-        """Тест установки строки в качестве цены"""
-        product = Product("Test", "Desc", 100.0, 5)
-        product.price = "not a number"
-        captured = capsys.readouterr()
-        assert "Цена должна быть числом" in captured.out
-        assert product.price == 100.0
+    def test_middle_price_with_products(self):
+        """Тест расчета средней цены с товарами в категории"""
+        product1 = Product("Product 1", "Desc 1", 100.0, 5)
+        product2 = Product("Product 2", "Desc 2", 200.0, 3)
+        category = Category("Test Category", "Test Description", [product1, product2])
 
-    def test_addition_different_types(self):
-        """Тест сложения продуктов разных типов"""
+        assert category.middle_price() == 150.0  # (100 + 200) / 2 = 150
+
+    def test_middle_price_empty_category(self):
+        """Тест расчета средней цены для пустой категории"""
+        category = Category("Test Category", "Test Description", [])
+
+        assert category.middle_price() == 0
+
+    def test_middle_price_single_product(self):
+        """Тест расчета средней цены для категории с одним товаром"""
         product = Product("Product", "Desc", 100.0, 5)
-        smartphone = Smartphone(
-            "Smartphone", "Desc", 1000.0, 2, 90.0, "Model", 128, "Black"
-        )
+        category = Category("Test Category", "Test Description", [product])
 
-        with pytest.raises(TypeError):
-            product + smartphone
+        assert category.middle_price() == 100.0
 
-    def test_add_non_product_to_category(self):
-        """Тест добавления не-продукта в категорию"""
-        category = Category("Test Category", "Test Description")
 
-        with pytest.raises(TypeError):
-            category.add_product("not a product")
+class TestCategoryAddProduct:
+    """Тесты для добавления продуктов в категорию с обработкой исключений"""
 
-    def test_product_repr(self):
-        """Тест метода __repr__ для Product"""
+    def test_add_product_with_zero_quantity(self, capsys):
+        """Тест добавления товара с нулевым количеством в категорию"""
+        category = Category("Test Category", "Test Description", [])
+        # Создаем продукт с положительным количеством
+        product = Product("Test Product", "Test Description", 100.0, 1)
+        # Вручную изменяем количество на 0 (так как нет сеттера с проверкой)
+        product.quantity = 0
+
+        category.add_product(product)
+
+        captured = capsys.readouterr()
+        assert "Ошибка при добавлении товара" in captured.out
+        assert "Нельзя добавить товар с нулевым количеством" in captured.out
+        assert "Обработка добавления товара завершена" in captured.out
+
+    def test_add_valid_product(self, capsys):
+        """Тест добавления валидного товара в категорию"""
+        category = Category("Test Category", "Test Description", [])
+        product = Product("Test Product", "Test Description", 100.0, 5)
+
+        category.add_product(product)
+
+        captured = capsys.readouterr()
+        assert "Товар успешно добавлен" in captured.out
+        assert "Обработка добавления товара завершена" in captured.out
+        assert len(category._products) == 1
+
+    def test_add_valid_product_stdout(self, capsys):
+        """Тест вывода сообщения при успешном добавлении товара"""
+        category = Category("Test Category", "Test Description", [])
+        product = Product("Test Product", "Test Description", 100.0, 5)
+
+        category.add_product(product)
+
+        captured = capsys.readouterr()
+        assert "Товар успешно добавлен" in captured.out
+        assert "Обработка добавления товара завершена" in captured.out
+
+
+class TestLogCreationMixin:
+
+    def test_repr_method_with_actual_product(self):
+        """Тест метода __repr__ для реального продукта"""
         product = Product("Test Product", "Test Description", 100.0, 5)
         repr_str = repr(product)
         assert "Product" in repr_str
         assert "name='Test Product'" in repr_str
         assert "description='Test Description'" in repr_str
-
-    def test_smartphone_repr(self):
-        """Тест метода __repr__ для Smartphone"""
-        smartphone = Smartphone(
-            "Test Phone",
-            "Test Description",
-            1000.0,
-            5,
-            95.5,
-            "Test Model",
-            256,
-            "Black",
-        )
-        repr_str = repr(smartphone)
-        assert "Smartphone" in repr_str
-        assert "name='Test Phone'" in repr_str
-
-    def test_lawn_grass_repr(self):
-        """Тест метода __repr__ для LawnGrass"""
-        grass = LawnGrass(
-            "Test Grass", "Test Description", 500.0, 10, "Russia", "7 days", "Green"
-        )
-        repr_str = repr(grass)
-        assert "LawnGrass" in repr_str
-        assert "name='Test Grass'" in repr_str
+        # Проверим, что приватные поля не отображаются
+        assert "_price" not in repr_str

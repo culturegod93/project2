@@ -1,66 +1,47 @@
-from src.models import Category, LawnGrass, Product, Smartphone
+from src.models import Category, Product, ZeroQuantityError
 
 if __name__ == "__main__":
-    # Создаем продукты - будет выведена информация о создании
+    # Тестирование обработки исключения при создании продукта с нулевым количеством
+    try:
+        product_invalid = Product("Бракованный товар", "Неверное количество", 1000.0, 0)
+    except ZeroQuantityError as e:
+        print(f"Возникла ошибка ZeroQuantityError: {e}")
+    else:
+        print(
+            "Не возникла ошибка ZeroQuantityError при попытке добавить продукт с нулевым количеством"
+        )
+
+    # Создание обычных продуктов
     product1 = Product(
         "Samsung Galaxy S23 Ultra", "256GB, Серый цвет, 200MP камера", 180000.0, 5
     )
     product2 = Product("Iphone 15", "512GB, Gray space", 210000.0, 8)
     product3 = Product("Xiaomi Redmi Note 11", "1024GB, Синий", 31000.0, 14)
 
-    print(product1.name)
-    print(product1.description)
-    print(product1.price)
-    print(product1.quantity)
-
-    print(product2.name)
-    print(product2.description)
-    print(product2.price)
-    print(product2.quantity)
-
-    print(product3.name)
-    print(product3.description)
-    print(product3.price)
-    print(product3.quantity)
-
+    # Создание категории и расчет средней цены
     category1 = Category(
-        "Смартфоны",
-        "Смартфоны, как средство не только коммуникации, но и получения "
-        "дополнительных функций для удобства жизни",
-        [product1, product2, product3],
+        "Смартфоны", "Категория смартфонов", [product1, product2, product3]
+    )
+    print(
+        f"Средняя цена в категории '{category1.name}': {category1.middle_price()} руб."
     )
 
-    print(category1.name == "Смартфоны")
-    print(category1.description)
-    print(len(category1.products))
-    print(category1.category_count)
-    print(category1.product_count)
+    # Тестирование пустой категории
+    category_empty = Category("Пустая категория", "Категория без продуктов", [])
+    print(f"Средняя цена в пустой категории: {category_empty.middle_price()} руб.")
 
-    product4 = Product('55" QLED 4K', "Фоновая подсветка", 123000.0, 7)
-    category2 = Category(
-        "Телевизоры",
-        "Современный телевизор, который позволяет наслаждаться просмотром, "
-        "станет вашим другом и помощником",
-        [product4],
-    )
+    # Демонстрация добавления товаров с обработкой исключений
+    print("\n=== ДЕМОНСТРАЦИЯ ДОБАВЛЕНИЯ ТОВАРОВ ===")
 
-    print(category2.name)
-    print(category2.description)
-    print(len(category2.products))
-    print(category2.products)
+    # Попытка добавить валидный товар
+    product4 = Product("Новый товар", "Описание", 50000.0, 3)
+    category1.add_product(product4)
 
-    print(Category.category_count)
-    print(Category.product_count)
+    # Попытка добавить не-продукт (добавляем аннотацию type: ignore для обхода проверки mypy)
+    category1.add_product("не товар")  # type: ignore
 
-    # Демонстрация работы миксина с наследниками
-    smartphone = Smartphone(
-        "Test Phone", "Test Description", 1000.0, 5, 95.5, "Test Model", 256, "Black"
-    )
-    grass = LawnGrass(
-        "Test Grass", "Test Description", 500.0, 10, "Russia", "7 days", "Green"
-    )
-
-    # Демонстрация repr
-    print(repr(product1))
-    print(repr(smartphone))
-    print(repr(grass))
+    # Попытка добавить товар с нулевым количеством
+    try:
+        product_zero = Product("Товар с нулем", "Описание", 1000.0, 0)
+    except ZeroQuantityError as e:
+        print(f"Не удалось создать товар: {e}")

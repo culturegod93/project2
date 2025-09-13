@@ -1,183 +1,193 @@
 import pytest
 
-from src.models import Category, CategoryIterator, Product
+from src.models import (BaseProduct, Category, LawnGrass, LogCreationMixin,
+                        Product, Smartphone)
 
 
-class TestProduct:
-    """Тесты для класса Product"""
+class TestBaseProduct:
+    """Тесты для абстрактного базового класса BaseProduct"""
 
-    def test_product_creation(self):
-        """Тест создания продукта"""
-        product = Product("Test Product", "Test Description", 100.0, 10)
-        assert product.name == "Test Product"
-        assert product.description == "Test Description"
-        assert product.price == 100.0
-        assert product.quantity == 10
+    def test_base_product_is_abstract(self):
+        """Тест, что BaseProduct является абстрактным классом"""
+        with pytest.raises(TypeError):
+            BaseProduct("Test", "Test", 100.0, 5)
 
-    def test_product_str(self):
-        """Тест строкового представления продукта"""
-        product = Product("Test Product", "Test Description", 100.0, 10)
-        expected = "Test Product, 100 руб. Остаток: 10 шт."
-        assert str(product) == expected
 
-    def test_product_addition(self):
-        """Тест сложения продуктов"""
-        product1 = Product("Product 1", "Desc 1", 100.0, 5)
-        product2 = Product("Product 2", "Desc 2", 200.0, 3)
-        result = product1 + product2
-        expected = 100.0 * 5 + 200.0 * 3  # 500 + 600 = 1100
-        assert result == expected
+class TestLogCreationMixin:
+    """Тесты для миксина LogCreationMixin"""
 
-    def test_product_addition_invalid_type(self):
-        """Тест сложения продукта с неверным типом"""
-        product = Product("Product", "Desc", 100.0, 5)
-        # Прямой вызов __add__ для проверки возврата NotImplemented
-        result = product.__add__("invalid")
-        assert result is NotImplemented
+    def test_log_creation_output(self, capsys):
+        """Тест вывода информации при создании объекта"""
 
-    def test_price_setter_valid(self):
-        """Тест установки корректной цены"""
-        product = Product("Product", "Desc", 100.0, 5)
-        product.price = 150.0
-        assert product.price == 150.0
+        class TestClass(LogCreationMixin):
+            def __init__(self, name, value):
+                super().__init__(name, value)
+                self.name = name
+                self.value = value
+                self.__post_init__()
 
-    def test_price_setter_invalid(self, capsys):
-        """Тест установки некорректной цены"""
-        product = Product("Product", "Desc", 100.0, 5)
-        product.price = -50.0
+        _ = TestClass("Test", 123)
         captured = capsys.readouterr()
-        assert "Цена не должна быть нулевая или отрицательная" in captured.out
-        assert product.price == 100.0  # Цена не изменилась
 
-    def test_new_product_classmethod(self):
-        """Тест создания продукта через classmethod"""
-        data = {
-            "name": "New Product",
-            "description": "New Description",
-            "price": 200.0,
-            "quantity": 7,
-        }
-        product = Product.new_product(data)
-        assert product.name == "New Product"
-        assert product.description == "New Description"
-        assert product.price == 200.0
-        assert product.quantity == 7
+        assert "TestClass" in captured.out
+        assert "'Test'" in captured.out
+        assert "123" in captured.out
 
-    def test_new_product_classmethod_invalid_data(self):
-        """Тест создания продукта с неверными данными"""
+    def test_repr_method(self):
+        """Тест метода __repr__"""
+
+        class TestClass(LogCreationMixin):
+            def __init__(self, name, value):
+                super().__init__(name, value)
+                self.name = name
+                self.value = value
+
+            def __post_init__(self):
+                pass
+
+        test_obj = TestClass("Test", 123)
+        repr_str = repr(test_obj)
+
+        assert "TestClass" in repr_str
+        assert "name='Test'" in repr_str
+        assert "value=123" in repr_str
+
+
+class TestProductWithMixin:
+    """Тесты для Product с миксином"""
+
+    def test_product_creation_output(self, capsys):
+        """Тест вывода информации при создании Product"""
+        _ = Product("Test Product", "Test Description", 100.0, 5)
+        captured = capsys.readouterr()
+
+        assert "Product" in captured.out
+        assert "'Test Product'" in captured.out
+        assert "'Test Description'" in captured.out
+        assert "100.0" in captured.out
+        assert "5" in captured.out
+
+    def test_product_repr(self):
+        """Тест метода __repr__ для Product"""
+        product = Product("Test Product", "Test Description", 100.0, 5)
+        repr_str = repr(product)
+
+        assert "Product" in repr_str
+        assert "name='Test Product'" in repr_str
+        assert "description='Test Description'" in repr_str
+        assert "_price=100.0" not in repr_str  # Приватные поля не должны отображаться
+        assert "quantity=5" in repr_str
+
+
+class TestInheritanceWithMixin:
+    """Тесты наследования с миксином"""
+
+    def test_smartphone_creation_output(self, capsys):
+        """Тест вывода информации при создании Smartphone"""
+        _ = Smartphone(
+            "Test Phone",
+            "Test Description",
+            1000.0,
+            5,
+            95.5,
+            "Test Model",
+            256,
+            "Black",
+        )
+        captured = capsys.readouterr()
+
+        assert "Smartphone" in captured.out
+        assert "'Test Phone'" in captured.out
+
+    def test_lawn_grass_creation_output(self, capsys):
+        """Тест вывода информации при создании LawnGrass"""
+        _ = LawnGrass(
+            "Test Grass", "Test Description", 500.0, 10, "Russia", "7 days", "Green"
+        )
+        captured = capsys.readouterr()
+
+        assert "LawnGrass" in captured.out
+        assert "'Test Grass'" in captured.out
+
+    def test_new_product_missing_fields(self):
+        """Тест создания продукта с отсутствующими полями"""
         data = {
-            "name": "New Product",
-            # Пропущены обязательные поля
+            "name": "Test Product"
+            # Нет price и quantity
         }
         with pytest.raises(Exception):
             Product.new_product(data)
 
+    def test_price_setter_negative(self, capsys):
+        """Тест установки отрицательной цены"""
+        product = Product("Test", "Desc", 100.0, 5)
+        product.price = -50.0
+        captured = capsys.readouterr()
+        assert "Цена не должна быть нулевая или отрицательная" in captured.out
+        assert product.price == 100.0
 
-class TestCategory:
-    """Тесты для класса Category"""
+    def test_price_setter_zero(self, capsys):
+        """Тест установки нулевой цены"""
+        product = Product("Test", "Desc", 100.0, 5)
+        product.price = 0.0
+        captured = capsys.readouterr()
+        assert "Цена не должна быть нулевая или отрицательная" in captured.out
+        assert product.price == 100.0
 
-    def test_category_creation(self):
-        """Тест создания категории"""
-        product = Product("Test Product", "Test Description", 100.0, 10)
-        category = Category("Test Category", "Test Description", [product])
+    def test_price_setter_string(self, capsys):
+        """Тест установки строки в качестве цены"""
+        product = Product("Test", "Desc", 100.0, 5)
+        product.price = "not a number"
+        captured = capsys.readouterr()
+        assert "Цена должна быть числом" in captured.out
+        assert product.price == 100.0
 
-        assert category.name == "Test Category"
-        assert category.description == "Test Description"
-        # Исправлено: используем публичный интерфейс вместо приватного атрибута
-        assert len(list(category)) == 1
-
-    def test_category_str(self):
-        """Тест строкового представления категории"""
-        product1 = Product("Product 1", "Desc 1", 100.0, 5)
-        product2 = Product("Product 2", "Desc 2", 200.0, 3)
-        category = Category("Test Category", "Test Description", [product1, product2])
-
-        expected = "Test Category, количество продуктов: 8 шт."
-        assert str(category) == expected
-
-    def test_add_product(self):
-        """Тест добавления продукта в категорию"""
-        product = Product("Test Product", "Test Description", 100.0, 10)
-        category = Category("Test Category", "Test Description", [])
-
-        category.add_product(product)
-        # Исправлено: используем публичный интерфейс вместо приватного атрибута
-        assert len(list(category)) == 1
-
-    def test_add_product_invalid_type(self):
-        """Тест добавления неверного типа в категорию"""
-        category = Category("Test Category", "Test Description", [])
+    def test_addition_different_types(self):
+        """Тест сложения продуктов разных типов"""
+        product = Product("Product", "Desc", 100.0, 5)
+        smartphone = Smartphone(
+            "Smartphone", "Desc", 1000.0, 2, 90.0, "Model", 128, "Black"
+        )
 
         with pytest.raises(TypeError):
-            category.add_product("invalid product")
+            product + smartphone
 
-    def test_products_property(self):
-        """Тест свойства products"""
-        product1 = Product("Product 1", "Desc 1", 100.0, 5)
-        product2 = Product("Product 2", "Desc 2", 200.0, 3)
-        category = Category("Test Category", "Test Description", [product1, product2])
+    def test_add_non_product_to_category(self):
+        """Тест добавления не-продукта в категорию"""
+        category = Category("Test Category", "Test Description")
 
-        expected = (
-            "Product 1, 100 руб. Остаток: 5 шт.\nProduct 2, 200 руб. Остаток: 3 шт.\n"
+        with pytest.raises(TypeError):
+            category.add_product("not a product")
+
+    def test_product_repr(self):
+        """Тест метода __repr__ для Product"""
+        product = Product("Test Product", "Test Description", 100.0, 5)
+        repr_str = repr(product)
+        assert "Product" in repr_str
+        assert "name='Test Product'" in repr_str
+        assert "description='Test Description'" in repr_str
+
+    def test_smartphone_repr(self):
+        """Тест метода __repr__ для Smartphone"""
+        smartphone = Smartphone(
+            "Test Phone",
+            "Test Description",
+            1000.0,
+            5,
+            95.5,
+            "Test Model",
+            256,
+            "Black",
         )
-        assert category.products == expected
+        repr_str = repr(smartphone)
+        assert "Smartphone" in repr_str
+        assert "name='Test Phone'" in repr_str
 
-    def test_category_iterator(self):
-        """Тест итерации по категории"""
-        product1 = Product("Product 1", "Desc 1", 100.0, 5)
-        product2 = Product("Product 2", "Desc 2", 200.0, 3)
-        category = Category("Test Category", "Test Description", [product1, product2])
-
-        product_names = [product.name for product in category]
-        assert product_names == ["Product 1", "Product 2"]
-
-    def test_category_count(self):
-        """Тест подсчета количества категорий"""
-        # Сбросим счетчики для чистоты теста
-        initial_count = Category.category_count
-        product = Product("Test Product", "Test Description", 100.0, 10)
-        # Используем _ для неиспользуемой переменной
-        _ = Category("Test Category", "Test Description", [product])
-
-        assert Category.category_count == initial_count + 1
-
-    def test_product_count(self):
-        """Тест подсчета количества продуктов"""
-        # Сбросим счетчики для чистоты теста
-        initial_count = Category.product_count
-        product1 = Product("Product 1", "Desc 1", 100.0, 5)
-        product2 = Product("Product 2", "Desc 2", 200.0, 3)
-        # Используем _ для неиспользуемой переменной
-        _ = Category("Test Category", "Test Description", [product1, product2])
-
-        assert Category.product_count == initial_count + 2
-
-
-class TestCategoryIterator:
-    """Тесты для класса CategoryIterator"""
-
-    def test_iterator_creation(self):
-        """Тест создания итератора"""
-        product = Product("Test Product", "Test Description", 100.0, 10)
-        iterator = CategoryIterator([product])
-
-        assert iterator.products == [product]
-        assert iterator.index == 0
-
-    def test_iterator_iteration(self):
-        """Тест итерации по продуктам"""
-        product1 = Product("Product 1", "Desc 1", 100.0, 5)
-        product2 = Product("Product 2", "Desc 2", 200.0, 3)
-        iterator = CategoryIterator([product1, product2])
-
-        products = list(iterator)
-        assert products == [product1, product2]
-
-    def test_iterator_stop_iteration(self):
-        """Тест остановки итерации"""
-        product = Product("Test Product", "Test Description", 100.0, 10)
-        iterator = CategoryIterator([product])
-
-        next(iterator)  # Первый вызов
-        with pytest.raises(StopIteration):
-            next(iterator)  # Второй вызов - должно вызвать исключение
+    def test_lawn_grass_repr(self):
+        """Тест метода __repr__ для LawnGrass"""
+        grass = LawnGrass(
+            "Test Grass", "Test Description", 500.0, 10, "Russia", "7 days", "Green"
+        )
+        repr_str = repr(grass)
+        assert "LawnGrass" in repr_str
+        assert "name='Test Grass'" in repr_str

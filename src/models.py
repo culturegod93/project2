@@ -1,25 +1,96 @@
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from typing import Dict, Iterator, List, Union
 
 
-class Product:
+class BaseProduct(ABC):
+    """
+    Абстрактный базовый класс для товаров.
+    Определяет общий интерфейс для всех продуктов.
+    """
+
+    @abstractmethod
+    def __init__(
+        self, name: str, description: str, price: float, quantity: int
+    ) -> None:
+        self.name = name
+        self.description = description
+        self._price = price
+        self.quantity = quantity
+
+    @abstractmethod
+    def __str__(self) -> str:
+        pass
+
+    @abstractmethod
+    def __add__(self, other) -> float:
+        pass
+
+    @property
+    @abstractmethod
+    def price(self) -> float:
+        pass
+
+    @price.setter
+    @abstractmethod
+    def price(self, value: Union[float, int]) -> None:
+        pass
+
+    @classmethod
+    @abstractmethod
+    def new_product(cls, data: Dict[str, object]) -> BaseProduct:
+        pass
+
+
+class LogCreationMixin:
+    """
+    Миксин для логирования создания объектов.
+    """
+
+    def __init__(self, *args, **kwargs):
+        # Сохраняем аргументы для логирования
+        self._init_args = args
+        self._init_kwargs = kwargs
+
+    def __post_init__(self):
+        """Метод для логирования после инициализации"""
+        class_name = self.__class__.__name__
+        params = ", ".join(
+            [
+                f"'{arg}'" if isinstance(arg, str) else str(arg)
+                for arg in self._init_args
+            ]
+        )
+        print(f"{class_name}({params})")
+
+    def __repr__(self) -> str:
+        class_name = self.__class__.__name__
+        params = ", ".join(
+            [
+                f"{key}={repr(value)}"
+                for key, value in self.__dict__.items()
+                if not key.startswith("_")
+            ]
+        )
+        return f"{class_name}({params})"
+
+
+class Product(LogCreationMixin, BaseProduct):
     """
     Класс товара.
-    Атрибуты:
-        name: название
-        description: описание
-        _price: приватная цена (float)
-        quantity: количество на складе (int)
+    Наследуется от BaseProduct и LogCreationMixin.
     """
 
     def __init__(
         self, name: str, description: str, price: float, quantity: int
     ) -> None:
-        self.name: str = name
-        self.description: str = description
-        self._price: float = float(price)
-        self.quantity: int = int(quantity)
+        # Инициализируем BaseProduct
+        BaseProduct.__init__(self, name, description, price, quantity)
+        # Инициализируем LogCreationMixin
+        LogCreationMixin.__init__(self, name, description, price, quantity)
+        # Вызываем пост-инициализацию для логирования
+        self.__post_init__()
 
     @property
     def price(self) -> float:
@@ -72,11 +143,78 @@ class Product:
     def __add__(self, other: Product) -> float:
         """
         Сложение двух товаров — возвращает суммарную стоимость (price * quantity).
-        Если other не Product — возвращает NotImplemented.
+        Если other не того же типа — выбрасывает TypeError.
         """
-        if not isinstance(other, Product):
-            return NotImplemented
+        if type(self) is not type(other):
+            raise TypeError("Нельзя складывать товары разных типов")
         return float(self.price * self.quantity + other.price * other.quantity)
+
+
+class Smartphone(Product):
+    """
+    Класс Смартфон, наследник Product.
+    Дополнительные атрибуты:
+        efficiency: производительность
+        model: модель
+        memory: объем встроенной памяти
+        color: цвет
+    """
+
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        price: float,
+        quantity: int,
+        efficiency: float,
+        model: str,
+        memory: int,
+        color: str,
+    ) -> None:
+        super().__init__(name, description, price, quantity)
+        self.efficiency: float = efficiency
+        self.model: str = model
+        self.memory: int = memory
+        self.color: str = color
+
+    def __str__(self) -> str:
+        """Строковое представление смартфона."""
+        return (
+            f"{self.name}, {self.model}, {self.memory}GB, {self.color}, "
+            f"{int(self.price)} руб. Остаток: {self.quantity} шт."
+        )
+
+
+class LawnGrass(Product):
+    """
+    Класс Трава газонная, наследник Product.
+    Дополнительные атрибуты:
+        country: страна-производитель
+        germination_period: срок прорастания
+        color: цвет
+    """
+
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        price: float,
+        quantity: int,
+        country: str,
+        germination_period: str,
+        color: str,
+    ) -> None:
+        super().__init__(name, description, price, quantity)
+        self.country: str = country
+        self.germination_period: str = germination_period
+        self.color: str = color
+
+    def __str__(self) -> str:
+        """Строковое представление газонной травы."""
+        return (
+            f"{self.name}, {self.country}, {self.germination_period}, {self.color}, "
+            f"{int(self.price)} руб. Остаток: {self.quantity} шт."
+        )
 
 
 class Category:
@@ -109,7 +247,7 @@ class Category:
     def add_product(self, product: Product) -> None:
         """Добавить продукт в категорию (и увеличить product_count)."""
         if not isinstance(product, Product):
-            raise TypeError("product must be Product")
+            raise TypeError("Можно добавлять только объекты Product и его наследников")
         self._products.append(product)
         Category.product_count += 1
 
@@ -119,10 +257,7 @@ class Category:
         Геттер, возвращающий строку со всеми продуктами в формате:
         "Название продукта, X руб. Остаток: X шт.\n"
         """
-        return "".join(
-            f"{p.name}, {int(p.price)} руб. Остаток: {p.quantity} шт.\n"
-            for p in self._products
-        )
+        return "".join(f"{p}\n" for p in self._products)
 
     def __str__(self) -> str:
         """Возвращает строку с подсчётом общего количества товаров в данной категории."""

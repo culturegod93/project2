@@ -1,89 +1,66 @@
-from src.loader import load_from_json
-from src.models import Category, Product
+from src.models import Category, LawnGrass, Product, Smartphone
 
 if __name__ == "__main__":
-    # Создаем продукты
+    # Создаем продукты - будет выведена информация о создании
     product1 = Product(
         "Samsung Galaxy S23 Ultra", "256GB, Серый цвет, 200MP камера", 180000.0, 5
     )
     product2 = Product("Iphone 15", "512GB, Gray space", 210000.0, 8)
     product3 = Product("Xiaomi Redmi Note 11", "1024GB, Синий", 31000.0, 14)
 
-    # Создаем категорию с продуктами
+    print(product1.name)
+    print(product1.description)
+    print(product1.price)
+    print(product1.quantity)
+
+    print(product2.name)
+    print(product2.description)
+    print(product2.price)
+    print(product2.quantity)
+
+    print(product3.name)
+    print(product3.description)
+    print(product3.price)
+    print(product3.quantity)
+
     category1 = Category(
         "Смартфоны",
-        "Смартфоны, как средство не только коммуникации, но и получения дополнительных функций для удобства жизни",
+        "Смартфоны, как средство не только коммуникации, но и получения "
+        "дополнительных функций для удобства жизни",
         [product1, product2, product3],
     )
 
-    # Демонстрация новых возможностей
-    print("=== ДЕМОНСТРАЦИЯ МАГИЧЕСКИХ МЕТОДОВ ===")
+    print(category1.name == "Смартфоны")
+    print(category1.description)
+    print(len(category1.products))
+    print(category1.category_count)
+    print(category1.product_count)
 
-    # Выводим строковое представление категории
-    print("Строковое представление категории:")
-    print(category1)
-    print()
-
-    # Выводим строковое представление продукта
-    print("Строковое представление продукта:")
-    print(product1)
-    print()
-
-    # Демонстрация сложения продуктов
-    print("Сложение продуктов (общая стоимость):")
-    total_value = product1 + product2
-    print(f"Суммарная стоимость {product1.name} и {product2.name}: {total_value} руб.")
-    print()
-
-    # Демонстрация итерации по категории
-    print("Итерация по продуктам категории:")
-    for product in category1:
-        print(f"  - {product}")
-    print()
-
-    # Выводим список товаров категории через геттер
-    print("Список товаров категории через геттер:")
-    print(category1.products)
-
-    # Добавляем новый продукт через метод add_product
     product4 = Product('55" QLED 4K', "Фоновая подсветка", 123000.0, 7)
-    category1.add_product(product4)
-    print("После добавления нового продукта:")
-    print(category1.products)
-    print(f"Общее количество продуктов: {Category.product_count}")
-    print(f"Количество категорий: {Category.category_count}")
-
-    # Создаем продукт через classmethod new_product
-    new_product = Product.new_product(
-        {
-            "name": "Samsung Galaxy S23 Ultra",
-            "description": "256GB, Серый цвет, 200MP камера",
-            "price": 180000.0,
-            "quantity": 5,
-        }
+    category2 = Category(
+        "Телевизоры",
+        "Современный телевизор, который позволяет наслаждаться просмотром, "
+        "станет вашим другом и помощником",
+        [product4],
     )
-    print("Создан новый продукт через new_product:")
-    print(new_product)
 
-    # Тестируем сеттер цены
-    print("\nИзменяем цену продукта:")
-    new_product.price = 800
-    print(f"Новая цена: {new_product.price} руб.")
+    print(category2.name)
+    print(category2.description)
+    print(len(category2.products))
+    print(category2.products)
 
-    # Попытка установить отрицательную цену
-    new_product.price = -100
-    print(f"Цена после попытки установить -100: {new_product.price} руб.")
-    new_product.price = 0
-    print(f"Цена после попытки установить 0: {new_product.price} руб.")
+    print(Category.category_count)
+    print(Category.product_count)
 
-    # Демонстрация загрузки из JSON
-    print("\n=== ДЕМОНСТРАЦИЯ ЗАГРУЗКИ ИЗ JSON ===")
-    try:
-        categories = load_from_json("data/products.json")
-        for category in categories:
-            print(category)
-            for product in category:
-                print(f"  - {product}")
-    except Exception as e:
-        print(f"Ошибка при загрузке из JSON: {e}")
-        print("Создайте файл data/products.json для тестирования этой функции")
+    # Демонстрация работы миксина с наследниками
+    smartphone = Smartphone(
+        "Test Phone", "Test Description", 1000.0, 5, 95.5, "Test Model", 256, "Black"
+    )
+    grass = LawnGrass(
+        "Test Grass", "Test Description", 500.0, 10, "Russia", "7 days", "Green"
+    )
+
+    # Демонстрация repr
+    print(repr(product1))
+    print(repr(smartphone))
+    print(repr(grass))
